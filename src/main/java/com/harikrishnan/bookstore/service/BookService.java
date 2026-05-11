@@ -2,9 +2,13 @@ package com.harikrishnan.bookstore.service;
 
 import com.harikrishnan.bookstore.dto.*;
 import com.harikrishnan.bookstore.entity.*;
+import com.harikrishnan.bookstore.enums.OrderStatus;
+import com.harikrishnan.bookstore.exceptions.ConflictException;
 import com.harikrishnan.bookstore.exceptions.ResourceNotFoundException;
 import com.harikrishnan.bookstore.repository.BookRepository;
+import com.harikrishnan.bookstore.repository.PurchaseRepository;
 import com.harikrishnan.bookstore.repository.ReviewRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,11 +23,16 @@ public class BookService {
 
     private final ReviewRepository reviewRepository;
 
+    private final PurchaseRepository purchaseRepository;
+
+    private final AuditService auditService;
+
     @Transactional
     public BookResponseDto addBook(BookRequestDto bookRequestDto) {
             Book newBook = Book.builder()
                     .name(bookRequestDto.getName())
                     .price(bookRequestDto.getPrice())
+                    .stock(bookRequestDto.getStock())
                     .build();
 
             Book book = bookRepository.save(newBook);
@@ -31,6 +40,7 @@ public class BookService {
             return BookResponseDto.builder()
                     .name(book.getName())
                     .price(book.getPrice())
+                    .stock(book.getStock())
                     .build();
 
     }
@@ -52,10 +62,54 @@ public class BookService {
             return  BookResponseDto.builder()
                     .name(book.getName())
                     .price(book.getPrice())
+                    .stock(book.getStock())
                     .reviews(getAllReviews(book.getReviews()))
                     .build();
         }).toList();
     }
+
+    @Transactional(readOnly = true)
+    public BookResponseDto getBook (Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book",bookId ));
+        return  BookResponseDto.builder()
+                .name(book.getName())
+                .price(book.getPrice())
+                .stock(book.getStock())
+                .reviews(getAllReviews(book.getReviews()))
+                .build();
+    }
+
+    @Transactional
+    public PurchaseResponseDto purchase (@Valid PurchaseRequestDto purchaseRequestDto, Long bookId) {
+        Book book = bookRepository.findById(bookId).orElseThrow(() -> new ResourceNotFoundException("Book",bookId ));
+        if(book.getStock() < purchaseRequestDto.quantity()) {
+            auditService.log(OrderStatus.PURCHASE_FAILED, "Unable to purchase Book with id " + book.getId()+ "and name " + book.getName() + " and quantity " + purchaseRequestDto.quantity()+". Reason: ResourceNotFoundException");
+            throw new ConflictException("Required quantity of items are less than stocks available for book with id:" + bookId);
+        }
+
+        try {
+            book.reduceStock(purchaseRequestDto.quantity());
+            bookRepository.save(book);
+             Purchase newPurchase = Purchase.builder()
+                    .book(book)
+                    .quantity(purchaseRequestDto.quantity())
+                    .build();
+                   Purchase purchase = purchaseRepository.save(newPurchase);
+
+                   auditService.log(OrderStatus.PURCHASE_SUCCESS, "Book id=" + book.getId()+ "and name " + book.getName() + " and quantity " + purchaseRequestDto.quantity()+" purchase has been done successfully.");
+
+            return PurchaseResponseDto.builder()
+                .bookId(book.getId())
+                .quantity(purchaseRequestDto.quantity())
+                .id(purchase.getId())
+                .build();
+        } catch (Exception e) {
+            auditService.log(OrderStatus.PURCHASE_FAILED, "Unable to purchase Book with id " + book.getId()+ "and name " + book.getName() + " and quantity " + purchaseRequestDto.quantity()+". Reason:"+ e.getMessage());
+            throw new RuntimeException("Payment processing failed",e);
+        }
+
+    }
+
 
     @Transactional
     public ReviewResponseDto addReview (ReviewRequestDto reviewRequestDto, Long bookId) {

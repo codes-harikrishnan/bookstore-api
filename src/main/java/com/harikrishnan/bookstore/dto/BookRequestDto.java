@@ -18,5 +18,10 @@ public class BookRequestDto {
     @NotNull(message = "Price cannot be null")
     @Min(value = 1, message = "Should be greater than or equal to 1")
     BigDecimal price;
+
+    @NotNull(message = "Quantity cannot be null")
+    @Min(value = 1, message = "Should be greater than or equal to 1")
+    Integer stock;
+
 }
 

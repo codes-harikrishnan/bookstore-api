@@ -10,5 +10,6 @@ import java.util.List;
 public class BookResponseDto{
     String name;
     BigDecimal price;
+    Integer stock;
     List<ReviewResponseDto> reviews;
 }

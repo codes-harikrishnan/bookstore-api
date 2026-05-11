@@ -5,6 +5,7 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,6 +29,9 @@ public class Book {
     @Column(name = "price", nullable = false)
     private BigDecimal price;
 
+    @Column(name = "stock", nullable = false)
+    private Integer stock;
+
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
     private List<Review> reviews = new ArrayList<>();
 
@@ -38,8 +42,14 @@ public class Book {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Book(String name, BigDecimal price){
+    public Book(String name, BigDecimal price, Integer stock){
         this.name = name;
         this.price = price;
+        this.stock = stock;
     }
+
+    public void reduceStock (Integer quantity) {
+        this.stock = this.stock - quantity;
+    }
+
 }
