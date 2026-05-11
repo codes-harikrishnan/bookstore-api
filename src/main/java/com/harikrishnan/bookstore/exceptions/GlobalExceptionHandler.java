@@ -57,12 +57,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException ( Exception exception) {
 
-        // ADD THIS LINE TEMPORARILY
-        exception.printStackTrace();
-        // or
-        System.out.println("REAL ERROR: " + exception.getMessage());
-        System.out.println("CAUSE: " + exception.getCause());
-
         ApiError apiError = ApiError.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .message("An unexpected error has occurred")
