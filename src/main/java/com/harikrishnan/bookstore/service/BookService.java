@@ -6,13 +6,19 @@ import com.harikrishnan.bookstore.enums.OrderStatus;
 import com.harikrishnan.bookstore.exceptions.ConflictException;
 import com.harikrishnan.bookstore.exceptions.ResourceNotFoundException;
 import com.harikrishnan.bookstore.repository.BookRepository;
+import com.harikrishnan.bookstore.repository.BookSpecification;
 import com.harikrishnan.bookstore.repository.PurchaseRepository;
 import com.harikrishnan.bookstore.repository.ReviewRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -57,15 +63,36 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public List<BookResponseDto> getBooks () {
-        return bookRepository.findAllWithReviews().stream().map(book -> {
-            return  BookResponseDto.builder()
+    public Page<BookResponseDto> getBooks (Pageable pageable, String name, BigDecimal minPrice, BigDecimal maxPrice) {
+
+        Specification<Book> spec = (root, query, cb) -> cb.conjunction();
+
+        if(name != null && !name.isBlank()) {
+            spec = spec.and(BookSpecification.nameContains(name));
+        }
+
+        if(minPrice != null ) {
+            spec = spec.and(BookSpecification.minPrice(minPrice));
+        }
+
+        if(maxPrice != null) {
+            spec = spec.and(BookSpecification.maxPrice(maxPrice));
+        }
+
+
+        Page<Book> bookPage = bookRepository.findAll(spec, pageable);
+
+        List<Book> books = bookRepository.findWithReviews(bookPage.getContent());
+
+        List <BookResponseDto> dtos = books.stream().map(book ->   BookResponseDto.builder()
                     .name(book.getName())
                     .price(book.getPrice())
                     .stock(book.getStock())
                     .reviews(getAllReviews(book.getReviews()))
-                    .build();
-        }).toList();
+                    .build()
+        ).toList();
+
+        return new PageImpl<>(dtos,pageable,bookPage.getTotalElements());
     }
 
     @Transactional(readOnly = true)

@@ -8,12 +8,15 @@ import com.harikrishnan.bookstore.exceptions.ConflictException;
 import com.harikrishnan.bookstore.exceptions.ResourceNotFoundException;
 import com.harikrishnan.bookstore.repository.CustomerProfileRepository;
 import com.harikrishnan.bookstore.repository.CustomerRepository;
-import jakarta.validation.Valid;
+import com.harikrishnan.bookstore.repository.CustomerSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +56,7 @@ public class CustomerService {
             .build();
     }
 
+    @Transactional(readOnly = true)
     public CustomerResponseDto getCustomerDetails (Long id) {
             Customer customer = customerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Customer", id));
 
@@ -65,4 +69,22 @@ public class CustomerService {
                     .avatarUrlAddress(customerProfile.getAvatarUrl())
                     .build();
     }
+
+
+    @Transactional(readOnly = true)
+    public Page<CustomerResponseDto> getCustomers (Pageable pageable, String email) {
+
+        org.springframework.data.jpa.domain.Specification<CustomerProfile> specification = (root, query, cb) -> cb.conjunction();
+
+        if(email != null && !email.isBlank()) {
+            specification =  specification.and(CustomerSpecification.emailContains(email));        }
+
+        return  customerProfileRepository.findAll(specification,pageable).map(customerProfile -> CustomerResponseDto.builder()
+               .contactNumber(customerProfile.getPhone())
+               .shortDescription(customerProfile.getBio())
+               .avatarUrlAddress(customerProfile.getAvatarUrl())
+               .emailId(customerProfile.getCustomer().getEmail())
+               .build());
+    }
+
 }
