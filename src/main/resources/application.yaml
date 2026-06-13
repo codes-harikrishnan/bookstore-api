@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/orderdb
+    username: systemsage_user
+    password: Panchajanyam@123
 
   jpa:
     open-in-view: false
