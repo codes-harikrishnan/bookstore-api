@@ -5,6 +5,7 @@ import com.harikrishnan.bookstore.entity.*;
 import com.harikrishnan.bookstore.enums.OrderStatus;
 import com.harikrishnan.bookstore.exceptions.ConflictException;
 import com.harikrishnan.bookstore.exceptions.ResourceNotFoundException;
+import com.harikrishnan.bookstore.logger.StartupLogger;
 import com.harikrishnan.bookstore.repository.BookRepository;
 import com.harikrishnan.bookstore.repository.BookSpecification;
 import com.harikrishnan.bookstore.repository.PurchaseRepository;
@@ -32,6 +33,7 @@ public class BookService {
     private final PurchaseRepository purchaseRepository;
 
     private final AuditService auditService;
+
 
     @Transactional
     public BookResponseDto addBook(BookRequestDto bookRequestDto) {
@@ -161,7 +163,3 @@ public class BookService {
     }
 
 }
-
-
-//https://dashboard.render.com/web/new
-//https://github.com/codes-harikrishnan/bookstore-api/commits/main/

@@ -67,12 +67,79 @@ public class BookServiceTest {
     }
 
     @Test
+    void addBook_withBookRepositoryException_ShouldReturnErrorResponse () {
+        BookRequestDto bookRequestDto = BookRequestDto.builder()
+                .name("Clean code")
+                .price(BigDecimal.valueOf(100))
+                .stock(5)
+                .build();
+
+        when(bookRepository.save(any())).thenThrow(new RuntimeException("Unknown error"));
+        assertThatThrownBy(() -> bookService.addBook(bookRequestDto)).isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
     void getBook_WhenBookNotFound_ShouldThrowResourceNotFoundException() {
         when(bookRepository.findById(any(Long.class)))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.getBook(99L)).isInstanceOf(ResourceNotFoundException.class).hasMessageContaining("Book");
 
+    }
+
+    @Test
+    void getBook_WhenBookFound_ShouldReturnBookResponseDto () {
+        Book book = Book.builder()
+                .name("Clean code")
+                .price(BigDecimal.valueOf(100))
+                .stock(10)
+                .build();
+
+
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        BookResponseDto bookResponseDto = bookService.getBook(1L);
+        assertThat(bookResponseDto.getName()).isEqualTo(book.getName());
+        assertThat(bookResponseDto.getPrice()).isEqualTo(book.getPrice());
+        assertThat(bookResponseDto.getStock()).isEqualTo(book.getStock());
+        verify(bookRepository).findById(1L);
+    }
+
+    @Test
+    void addReview_WithValidRequest_ShouldReturnReviewResponseDto () {
+        Book book = Book.builder()
+                .name("Clean code")
+                .price(BigDecimal.valueOf(100))
+                .stock(10)
+                .build();
+
+        BookRequestDto bookRequestDto = BookRequestDto.builder()
+                .name("Clean code")
+                .price(BigDecimal.valueOf(100))
+                .stock(10)
+                .build();
+
+        ReviewRequestDto reviewRequestDto = ReviewRequestDto.builder()
+                .title("New review")
+                .rating(5)
+                .description("New description")
+                .build();
+
+        Review review = Review.builder()
+                .title("New review")
+                .book(book)
+                .rating(5)
+                .description("New description")
+                .build();
+
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(reviewRepository.save(any())).thenReturn(review);
+
+        ReviewResponseDto reviewResponseDto = bookService.addReview(reviewRequestDto,1L);
+       // assertThat(reviewResponseDto.getBookId()).isEqualTo(1L);
+        assertThat(reviewResponseDto.getRating()).isEqualTo(review.getRating());
+        assertThat(reviewResponseDto.getDescription()).isEqualTo(review.getDescription());
+        assertThat(reviewResponseDto.getTitle()).isEqualTo(review.getTitle());
+        verify(reviewRepository).save(any());
     }
 
     @Test

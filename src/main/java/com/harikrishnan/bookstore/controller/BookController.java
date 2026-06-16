@@ -35,7 +35,7 @@ public class BookController {
 
     @PostMapping("/{id}/purchase")
     public ResponseEntity<PurchaseResponseDto> purchaseBook (@Valid @RequestBody PurchaseRequestDto purchaseRequestDto, @PathVariable Long id){
-        System.out.println("Purchase initiated....");
+        log.info("Purchase initiated for a book with id ={}",id);
         return ResponseEntity.status(HttpStatus.OK).body(bookService.purchase(purchaseRequestDto, id));
     }
 
@@ -58,6 +58,7 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponseDto> getBook (@Valid @PathVariable Long id) {
+
         return ResponseEntity.status(HttpStatus.OK).body(bookService.getBook(id));
     }
 
