@@ -20,11 +20,11 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    @PostMapping
-    public ResponseEntity<CustomerResponseDto> registerCustomer (@Valid @RequestBody CustomerRequestDto customerRequestDto) {
-        CustomerResponseDto customerResponseDto = customerService.saveCustomer(customerRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDto);
-    }
+//    @PostMapping
+//    public ResponseEntity<CustomerResponseDto> registerCustomer (@Valid @RequestBody CustomerRequestDto customerRequestDto) {
+//        CustomerResponseDto customerResponseDto = customerService.saveCustomer(customerRequestDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(customerResponseDto);
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<CustomerResponseDto> getCustomerDetails(@PathVariable Long id) {
