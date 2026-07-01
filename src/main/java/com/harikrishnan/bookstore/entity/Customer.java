@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
     @Column(nullable = false, unique = true, length = 255)
@@ -22,6 +21,9 @@ public class Customer {
 
     @Column(nullable = false, length = 255)
     private String passwordHash;
+
+    @Column(nullable = false)
+    private String role;
 
     @CreatedDate
     @Column(updatable = false)
@@ -31,9 +33,10 @@ public class Customer {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Customer(String email, String passwordHash) {
+    public Customer(String email, String passwordHash, String role) {
         this.email = email;
         this.passwordHash = passwordHash;
+        this.role = role;
     }
 
 }

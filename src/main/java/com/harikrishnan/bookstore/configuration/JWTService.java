@@ -1,54 +1,63 @@
 package com.harikrishnan.bookstore.configuration;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.hibernate.mapping.Any;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class JWTService {
 
     private final JwtProperties jwtProperties;
 
-    public SecretKey getSigningKey () {
-        return Keys.hmacShaKeyFor(
-                jwtProperties.getSecret().getBytes()
-        );
+    private final UserDetailsService userDetailsService;
+
+    public SecretKey getSecretKey () {
+        return Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes());
     }
 
-
-    public String generateToken(String email) {
-        return Jwts.builder()
-                .subject(email)
+    public String generateToken (String subject, Date expiration) {
+        return Jwts.builder().signWith(getSecretKey())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
-                .signWith(getSigningKey())
+                .subject(subject)
+                .expiration(expiration)
                 .compact();
     }
 
-    public Claims extractAllClaims (String token) {
-        return Jwts.parser()
-                .verifyWith(getSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public String generateAccessToken (String email) {
+        return generateToken(email, new Date(System.currentTimeMillis() + jwtProperties.getExpiration()));
     }
 
-    public String extractEmail (String token) {
-        return extractAllClaims(token).getSubject();
+    public Claims getClaimsFromToken (String token) {
+        return Jwts.parser().verifyWith(getSecretKey())
+                .build().parseSignedClaims(token).getPayload();
     }
 
     public boolean isTokenExpired (String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
+        Claims claims = getClaimsFromToken(token);
+        return claims.getExpiration().before(new Date());
     }
 
-    public boolean isTokenValid (String token,String email) {
-        return extractEmail(token).equals(email) && !isTokenExpired(token);
+    public String extractEmail (String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.getSubject();
+    }
+
+    public boolean validateToken(String token, String email) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.getSubject().equals(email) && claims.getExpiration().after(new Date());
     }
 
 }

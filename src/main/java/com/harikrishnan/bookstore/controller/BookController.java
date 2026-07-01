@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -24,6 +25,7 @@ public class BookController {
     private final BookService bookService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookResponseDto> addBook(@Valid @RequestBody BookRequestDto book){
         return ResponseEntity.status(HttpStatus.CREATED).body(bookService.addBook(book));
     }

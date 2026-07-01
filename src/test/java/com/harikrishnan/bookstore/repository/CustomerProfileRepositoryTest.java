@@ -26,6 +26,7 @@ public class CustomerProfileRepositoryTest {
         Customer customer = Customer.builder()
                 .email("harikrishnan@gmail.com")
                 .passwordHash("Encoded_password")
+                .role("USER")
                 .build();
 
         CustomerProfile customerProfile = CustomerProfile.builder()

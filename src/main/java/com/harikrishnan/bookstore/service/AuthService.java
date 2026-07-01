@@ -38,7 +38,10 @@ public class AuthService {
 
         Customer newCustomer = Customer.builder()
                 .email(customerRequestDto.getEmailId())
-                .passwordHash(passwordEncoder.encode(customerRequestDto.getPassword())).build();
+                .passwordHash(passwordEncoder.encode(customerRequestDto.getPassword()))
+                .role("USER")
+                .build();
+
         Customer customer =  customerRepository.save(newCustomer);
 
         CustomerProfile newCustomerProfile =  CustomerProfile.builder()
@@ -61,7 +64,7 @@ public class AuthService {
     public AuthResponseDto authenticate (AuthRequestDto authRequestDto) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequestDto.getUsername(),authRequestDto.getPassword()));
         return AuthResponseDto.builder()
-                .token(jwtService.generateToken(authRequestDto.getUsername()))
+                .token(jwtService.generateAccessToken(authRequestDto.getUsername()))
                 .build();
     }
 }

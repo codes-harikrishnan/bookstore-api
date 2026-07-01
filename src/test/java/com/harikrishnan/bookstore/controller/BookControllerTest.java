@@ -1,5 +1,6 @@
 package com.harikrishnan.bookstore.controller;
 
+import com.harikrishnan.bookstore.configuration.JWTService;
 import com.harikrishnan.bookstore.dto.BookRequestDto;
 import com.harikrishnan.bookstore.dto.BookResponseDto;
 import com.harikrishnan.bookstore.exceptions.ResourceNotFoundException;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -29,6 +31,12 @@ public class BookControllerTest {
 
     @MockitoBean
     private BookService bookService;
+
+    @MockitoBean
+    private JWTService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
